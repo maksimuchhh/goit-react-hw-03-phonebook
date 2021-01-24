@@ -1,25 +1,102 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { Component } from "react";
+import Section from "./components/Section";
+import Input from "./components/Form/Input";
+import Form from "./components/Form";
+import List from "./components/List";
+import styles from "./App.module.css";
+import { v4 as uuidv4 } from "uuid";
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+export class App extends Component {
+  state = {
+    contacts: [
+      { id: "id-1", name: "Rosie Simpson", number: "459-12-56" },
+      { id: "id-2", name: "Hermione Kline", number: "443-89-12" },
+      { id: "id-3", name: "Eden Clements", number: "645-17-79" },
+      { id: "id-4", name: "Annie Copeland", number: "227-91-26" },
+    ],
+    filter: "",
+  };
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.contacts !== this.state.contacts) {
+      localStorage.setItem("contacts", JSON.stringify(this.state.contacts));
+    }
+  }
+  componentDidMount() {
+    if (!localStorage.getItem("contacts")) return;
+    this.setState({ contacts: JSON.parse(localStorage.getItem("contacts")) });
+  }
+  changeInput = (evt) => {
+    this.setState((prevState) => {
+      return {
+        ...prevState,
+        [evt.target.id]: evt.target.value,
+      };
+    });
+  };
+  deleteContact = (idOfEl) => {
+    this.setState((prevState) => {
+      prevState.contacts.find((el, index, arr) => {
+        if (el.id === idOfEl) {
+          arr.splice(index, 1);
+          return true;
+        } else {
+          return false;
+        }
+      });
+      return {
+        ...prevState,
+        contacts: [...prevState.contacts],
+      };
+    });
+  };
+
+  addContact = (evt, state) => {
+    console.log(this.state);
+    evt.preventDefault();
+    this.setState((prevState) => {
+      const id = uuidv4();
+      const name = state.name;
+      const number = state.number;
+      if (!name) return;
+      const dublicated = prevState.contacts.find((el) => {
+        return el.name === name;
+      });
+      if (!(dublicated === undefined)) {
+        alert(`You already add ${name}`);
+        return;
+      } else {
+        return {
+          ...prevState,
+          contacts: [
+            ...prevState.contacts,
+            {
+              id: id,
+              name: name,
+              number: number,
+            },
+          ],
+        };
+      }
+    });
+  };
+  render() {
+    return (
+      <div className={styles.container}>
+        <h1>Phonebook</h1>
+        <Form addContact={this.addContact} />
+        {this.state.contacts.length > 0 && (
+          <Section title="Contacts">
+            <Input name="filter" changeInputForFilter={this.changeInput} />
+            <List
+              contacts={this.state.contacts}
+              filter={this.state.filter}
+              deleteContact={this.deleteContact}
+            />
+          </Section>
+        )}
+      </div>
+    );
+  }
 }
 
 export default App;
